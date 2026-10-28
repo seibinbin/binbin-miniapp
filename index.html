@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Binbin Finance</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!--
+  Binbin Finance — Telegram Mini App (hanya-baca).
+  File ini tidak berisi data atau secret. Data diambil dari Apps Script milikmu setelah Telegram
+  menandatangani sesi (initData). Alamat Apps Script datang dari parameter ?api= di tombol menu bot.
+  Pratinjau tanpa Telegram: buka halaman ini dengan ?demo=1 (data contoh).
+-->
+<style>
+:root{
+  --bg:#F3F7FB;--surface:#FFFFFF;--border:#E2EAF3;--divider:#EEF2F7;--track:#E8EEF5;--dash:#D5DEE8;
+  --text:#16283D;--muted:#5B6B7E;--accent:#136B66;
+  --needs:#276CA8;--wants:#7857AF;--saving:#177E79;--invest:#B98937;--invest-text:#7A5718;--invest-dash:#D5C4A0;
+  --over:#BA4D52;--over-text:#B23B42;--pos:#136B66;--neg:#B23B42;
+  --warn-bg:#FFF3E0;--warn-border:#FFF3E0;--warn-title:#7A4108;--warn-body:#7A4108;--warn-chip:transparent;--warn-icon:#7A4108;
+  --warn-btn-bg:#7A4108;--warn-btn-text:#FFFFFF;--pill-warn-bg:#FFF3E0;--pill-warn-text:#8A4B0F;
+  --chip-needs-bg:#EAF2FA;--chip-needs:#23609A;--chip-in-bg:#E4F3F1;--chip-in:#136B66;--chip-warn-bg:#FFF3E0;--chip-warn:#7A4108;
+  --chip-debt-bg:#FDECEC;--chip-debt:#B23B42;--chip-neutral-bg:#EEF2F7;--chip-neutral:#5B6B7E;--pill-debt-bg:#FDECEC;
+  --hero-bg:#16283D;--hero-border:#16283D;--hero-text:#FFFFFF;--hero-label:#B9C7D6;--hero-divider:#2E4560;
+  --chart-in:#276CA8;--chart-out:#C9731F;--subbar:#233B58;
+  --tab-bg:#FFFFFF;--tab-border:#E2EAF3;--tab-active:#136B66;--tab-idle:#5B6B7E;
+  --skeleton:#E8EEF5;
+}
+:root[data-theme="dark"]{
+  --bg:#0E1116;--surface:#171B22;--border:#222833;--divider:#222833;--track:#262C37;--dash:#2C333F;
+  --text:#ECEFF4;--muted:#A3ADBD;--accent:#FFFFFF;
+  --needs:#6CB6FF;--wants:#B49CFF;--saving:#7FE07A;--invest:#F2C14E;--invest-text:#F2C14E;--invest-dash:#4A3B18;
+  --over:#FF8A8A;--over-text:#FF8A8A;--pos:#7FE07A;--neg:#FF8A8A;
+  --warn-bg:#171B22;--warn-border:#4A3B18;--warn-title:#ECEFF4;--warn-body:#A3ADBD;--warn-chip:#2B2416;--warn-icon:#F2C14E;
+  --warn-btn-bg:#F2C14E;--warn-btn-text:#1A1405;--pill-warn-bg:#2B2416;--pill-warn-text:#F5C76A;
+  --chip-needs-bg:#16263A;--chip-needs:#6CB6FF;--chip-in-bg:#15301C;--chip-in:#7FE07A;--chip-warn-bg:#2B2416;--chip-warn:#F2C14E;
+  --chip-debt-bg:#3A1C1F;--chip-debt:#FF8A8A;--chip-neutral-bg:#222833;--chip-neutral:#A3ADBD;--pill-debt-bg:#3A1C1F;
+  --hero-bg:#2A313C;--hero-border:#434C5B;--hero-text:#FFFFFF;--hero-label:#B4BDCB;--hero-divider:#434C5B;
+  --chart-in:#5E9EF0;--chart-out:#F5B370;--subbar:#C2CBD6;
+  --tab-bg:#12161C;--tab-border:#1F242D;--tab-active:#FFFFFF;--tab-idle:#A3ADBD;
+  --skeleton:#1F242D;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;color:inherit}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+main{display:flex;flex-direction:column;gap:16px;padding:16px 16px calc(96px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;min-height:100vh}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+.stack{display:flex;flex-direction:column}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.note{margin:0;font-size:12px;line-height:1.5;color:var(--muted)}
+h2{margin:0;font-size:17px;font-weight:700}
+h3{margin:0;font-size:15px;font-weight:700}
+.pill{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:13px;font-weight:600}
+.linkbtn{border:0;background:transparent;padding:12px 0 12px 12px;font-size:14px;font-weight:600;color:var(--accent);cursor:pointer}
+.refresh{border:0;background:transparent;padding:8px 0 8px 8px;font-size:12px;color:var(--muted);cursor:pointer}
+/* hero */
+.hero{background:var(--hero-bg);border:1px solid var(--hero-border);color:var(--hero-text);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.hero .lbl{font-size:13px;color:var(--hero-label)}
+.hero .big{font-size:34px;font-weight:800;letter-spacing:-.5px;line-height:1.15}
+.hero .grid2 .lbl{font-size:12px}
+.hero .mid{font-size:17px;font-weight:700}
+.hero .divider{height:1px;background:var(--hero-divider)}
+.alloc{display:flex;gap:3px;height:6px}
+.alloc span{display:block;height:6px;border-radius:3px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:1px}
+:root[data-theme="light"] .alloc,:root[data-theme="light"] .hero .dot{display:none}
+:root[data-theme="dark"] .hero .lbl{font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+/* attention */
+.warn{display:flex;gap:12px;align-items:flex-start;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:16px;padding:14px 16px}
+.warn .chip{width:36px;height:36px;flex:none;border-radius:10px;background:var(--warn-chip);color:var(--warn-icon);display:flex;align-items:center;justify-content:center}
+:root[data-theme="light"] .warn .chip{width:22px;height:22px;margin-top:1px}
+.warn .t{font-size:14px;font-weight:700;color:var(--warn-title)}
+.warn .b{font-size:13px;line-height:1.5;color:var(--warn-body)}
+.warn button{align-self:flex-start;height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--warn-btn-bg);color:var(--warn-btn-text);font-size:14px;font-weight:700;cursor:pointer}
+/* bars */
+.bucket{display:flex;flex-direction:column;gap:6px}
+.bname{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.sw{width:10px;height:10px;border-radius:3px;flex:none}
+.sw.outline{background:transparent!important;border:2px solid var(--invest)}
+.amt{font-size:13px;color:var(--muted)}
+.amt strong{color:var(--text);font-weight:700}
+.track{height:8px;border-radius:99px;background:var(--track);overflow:hidden;display:flex;gap:2px}
+.track.lg{height:10px}
+.track span{display:block;height:100%}
+.track .solo{border-radius:99px}
+.over{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--over-text)}
+.sep{padding-top:14px;border-top:1px dashed var(--dash)}
+/* list */
+.list{list-style:none;margin:0;padding:4px 16px;background:var(--surface);border:1px solid var(--border);border-radius:16px}
+.list li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--divider)}
+.list li:last-child{border-bottom:0}
+.ic{width:40px;height:40px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.ic.round{border-radius:999px}
+.ic.needs{background:var(--chip-needs-bg);color:var(--chip-needs)}
+.ic.in{background:var(--chip-in-bg);color:var(--chip-in)}
+.ic.warnc{background:var(--chip-warn-bg);color:var(--chip-warn)}
+.ic.debt{background:var(--chip-debt-bg);color:var(--chip-debt)}
+.ic.neutral{background:var(--chip-neutral-bg);color:var(--chip-neutral)}
+.li-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-title{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li-sub{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.li-amt{font-size:14px;font-weight:700;white-space:nowrap}
+.tag{padding:2px 8px;border-radius:999px;font-weight:600}
+.tag.warnt{background:var(--pill-warn-bg);color:var(--pill-warn-text)}
+.tag.debtt{background:var(--pill-debt-bg);color:var(--chip-debt)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+/* budget */
+.monthnav{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px}
+.monthnav button{width:44px;height:44px;border:0;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.monthnav button:disabled{opacity:.3;cursor:default}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat .v{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ratio{display:flex;gap:3px;height:12px}
+.ratio span{display:block;height:12px;border-radius:2px}
+.ratio span:first-child{border-radius:6px 2px 2px 6px}
+.ratio span:last-child{border-radius:2px 6px 6px 2px}
+.dashed{border-style:dashed;border-color:var(--invest-dash)}
+.chart{height:150px;display:grid;gap:8px;align-items:end;border-bottom:1px solid var(--dash)}
+.chart .col{display:flex;justify-content:center;align-items:flex-end;gap:3px;height:100%}
+.chart .col span{width:14px;border-radius:4px 4px 0 0;min-height:2px}
+.chart-labels{display:grid;gap:8px;margin-top:-6px;font-size:12px;color:var(--muted);text-align:center}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--tab-bg);border-top:1px solid var(--tab-border);padding:6px 8px calc(12px + env(safe-area-inset-bottom));z-index:5}
+nav.tabs button{min-height:52px;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--tab-idle);cursor:pointer}
+nav.tabs button[aria-current="page"]{color:var(--tab-active);font-weight:700}
+/* states */
+.sk{background:var(--skeleton);border-radius:16px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.center{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:28px 20px}
+.btn{height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--border);background:var(--surface);font-size:14px;font-weight:700;cursor:pointer}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;padding:1px 5px;border-radius:6px;background:var(--track)}
+</style>
+</head>
+<body>
+<main id="screen" aria-live="polite"></main>
+<nav class="tabs" aria-label="Navigasi utama">
+  <button type="button" data-tab="home" aria-current="page">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>Ringkasan
+  </button>
+  <button type="button" data-tab="budget">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Budget
+  </button>
+  <button type="button" data-tab="funds">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M16 14.5h2"/></svg>Funds &amp; utang
+  </button>
+</nav>
+<script>
+(function(){
+'use strict';
+var EXEC_RE=/^https:\/\/script\.google\.com\/(?:a\/macros\/[^/?#]+|macros)\/s\/[A-Za-z0-9_-]+\/exec$/;
+var MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
+var params=new URLSearchParams(location.search);
+var DEMO={ok:true,v:'demo',generatedAt:'2026-10-28 08:12',today:'2026-10-28',month:'2026-10',current:'2026-10',start:'2026-05',
+  saldo:{total:1426500,free:576500,reserved:850000,receivable:150000,payable:50000,net:1526500,hasOpening:true},
+  budget:{income:2000000,spent:732000,cashFlow:1268000,planned:[400000,400000,1000000,200000],ratio:[20,20,50,10],needs:245000,wants:432000,unknown:55000,
+    wantsBudget:400000,wantsCut:0,wantsCarryIn:0,netContrib:600000,savingLimit:1000000,fundSpent:0,swept:0,sweep:100000,
+    subcategories:[['Food & Drink',262000],['Entertainment',180000],['Shopping',120000],['Transport',95000],['Other',75000]]},
+  attention:{count:2,total:55000},
+  recent:[{id:'1',at:'2026-10-28',desc:'nasi goreng',amount:18000,kind:'Expense',category:'Needs',sub:'Food & Drink'},
+    {id:'2',at:'2026-10-27',desc:'laundry',amount:25000,kind:'Expense',category:'Uncategorized',sub:'Other'},
+    {id:'3',at:'2026-10-27',desc:'bensin',amount:30000,kind:'Expense',category:'Needs',sub:'Transport'},
+    {id:'4',at:'2026-10-25',desc:'gajian',amount:500000,kind:'Income',category:'Income',sub:'Income'}],
+  funds:[{name:'emergency',balance:500000,target:1500000},{name:'hp baru',balance:250000,target:2000000},{name:'liburan',balance:100000,target:null}],
+  loans:[{id:'5',type:'piutang',person:'Raka',remaining:150000,original:150000,due:'2026-11-05',overdue:false},
+    {id:'6',type:'utang',person:'Sinta',remaining:50000,original:50000,due:'2026-10-20',overdue:true}],
+  trend:[{month:'2026-05',income:1800000,spent:1250000},{month:'2026-06',income:1900000,spent:1400000},{month:'2026-07',income:1700000,spent:1550000},
+    {month:'2026-08',income:2100000,spent:1300000},{month:'2026-09',income:1800000,spent:1000000},{month:'2026-10',income:2000000,spent:732000}]};
+
+var state={tab:'home',demo:params.get('demo')==='1',api:null,home:null,byMonth:{},budgetMonth:null,loading:false,error:null,loadedAt:0};
+var screen=document.getElementById('screen');
+
+/* ---------- util ---------- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var NF=new Intl.NumberFormat('id-ID');
+function rp(n){return (n<0?'−':'')+'Rp'+NF.format(Math.round(Math.abs(n||0)));}
+function rpSigned(n){return (n>0?'+':n<0?'−':'')+'Rp'+NF.format(Math.round(Math.abs(n||0)));}
+/* Ringkas untuk kartu kecil: Rp1,24 jt. Angka lengkap tetap ada di kartu detail dan di title. */
+var NF2=new Intl.NumberFormat('id-ID',{maximumFractionDigits:2});
+function rpShort(n,signed){
+  var a=Math.abs(n||0),s=signed?(n>0?'+':n<0?'−':''):(n<0?'−':'');
+  return a>=1e6?s+'Rp'+NF2.format(Math.floor(a/1e4)/100)+' jt':s+'Rp'+NF.format(Math.round(a));
+}
+function pct(a,b){return b>0?Math.round(a/b*100):0;}
+function monthName(m){return MONTHS[Number(m.slice(5,7))-1]+' '+m.slice(0,4);}
+function monthShort(m){return MONTHS[Number(m.slice(5,7))-1].slice(0,3);}
+function addMonth(m,d){var y=Number(m.slice(0,4)),n=Number(m.slice(5,7))-1+d;y+=Math.floor(n/12);n=((n%12)+12)%12;return y+'-'+String(n+1).padStart(2,'0');}
+function dayLabel(iso,today){
+  if(!iso)return '';
+  if(iso===today)return 'Hari ini';
+  var t=new Date(today+'T12:00:00'),d=new Date(iso+'T12:00:00');
+  if(Math.round((t-d)/86400000)===1)return 'Kemarin';
+  return Number(iso.slice(8,10))+' '+monthShort(iso)+(iso.slice(0,4)!==today.slice(0,4)?' '+iso.slice(0,4):'');
+}
+function title(s){s=String(s||'');return s==='emergency'?'Emergency':s.charAt(0).toUpperCase()+s.slice(1);}
+function haptic(){try{tg&&tg.HapticFeedback&&tg.HapticFeedback.selectionChanged();}catch(e){}}
+var IC={
+  out:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7l10 10"/><path d="M17 9v8H9"/></svg>',
+  inn:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>',
+  swap:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8h12l-3-3"/><path d="M17 16H5l3 3"/></svg>',
+  warn:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.5v.01"/></svg>',
+  shield:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></svg>',
+  target:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6"/></svg>',
+  person:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  clock:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  up:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M6 11l6-6 6 6"/></svg>',
+  left:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+  right:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+};
+
+/* ---------- theme & Telegram ---------- */
+function applyTheme(){
+  var dark=tg&&tg.colorScheme?tg.colorScheme==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  if(tg){try{
+    tg.setHeaderColor(dark?'#12161C':'#FFFFFF');tg.setBackgroundColor(dark?'#0E1116':'#F3F7FB');
+    if(tg.isVersionAtLeast&&tg.isVersionAtLeast('7.10'))tg.setBottomBarColor(dark?'#12161C':'#FFFFFF');
+  }catch(e){}}
+}
+if(tg){try{tg.ready();tg.expand();tg.onEvent('themeChanged',applyTheme);}catch(e){}}
+applyTheme();
+
+/* ---------- data ---------- */
+function apiUrl(){var a=params.get('api')||'';return EXEC_RE.test(a)?a:null;}
+function fetchMonth(month){
+  if(state.demo)return Promise.resolve(Object.assign({},DEMO,{month:month||DEMO.month}));
+  return fetch(state.api+'?api=miniapp',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({initData:tg.initData,month:month||undefined})})
+    .then(function(r){if(!r.ok)throw new Error('Server menjawab '+r.status);return r.json();})
+    .then(function(d){if(!d||!d.ok){var e=new Error(d&&d.error||'Data gagal dimuat.');e.code=d&&d.code;throw e;}return d;});
+}
+function loadHome(){
+  state.loading=true;state.error=null;render();
+  return fetchMonth(null).then(function(d){
+    state.home=d;state.byMonth[d.month]=d;state.loadedAt=Date.now();
+    if(!state.budgetMonth)state.budgetMonth=d.month;
+  }).catch(function(e){state.error=e;}).then(function(){state.loading=false;render();});
+}
+function loadBudgetMonth(m){
+  state.budgetMonth=m;
+  if(state.byMonth[m]){render();return;}
+  state.loading=true;render();
+  fetchMonth(m).then(function(d){state.byMonth[m]=d;}).catch(function(e){state.error=e;}).then(function(){state.loading=false;render();});
+}
+
+/* ---------- komponen ---------- */
+function bar(used,max,color,big){
+  var cls='track'+(big?' lg':'');
+  if(max<=0)return '<div class="'+cls+'"></div>';
+  if(used<=max)return '<div class="'+cls+'"><span class="solo" style="width:'+Math.max(0,Math.min(100,used/max*100))+'%;background:'+color+'"></span></div>';
+  return '<div class="'+cls+'"><span style="width:'+(max/used*100)+'%;background:'+color+'"></span><span style="flex:1;background:var(--over)"></span></div>';
+}
+function head(label,swatch,used,max,prefix){
+  return '<div class="row" style="align-items:baseline"><span class="bname"><span class="sw" style="background:'+swatch+'"></span>'+label+'</span>'+
+    '<span class="amt num">'+(prefix||'')+'<strong>'+rp(used)+'</strong> / '+rp(max)+'</span></div>';
+}
+function txIcon(r){
+  if(r.kind==='Income'||r.kind==='Refund'||r.kind==='LoanBorrow'||r.kind==='LoanCollect')return '<span class="ic in">'+IC.inn+'</span>';
+  if(r.kind==='Expense'&&r.category==='Uncategorized')return '<span class="ic warnc">'+IC.out+'</span>';
+  if(r.kind==='Expense'||r.kind==='FundExpense'||r.kind==='LoanLend'||r.kind==='LoanRepay')return '<span class="ic needs">'+IC.out+'</span>';
+  return '<span class="ic neutral">'+IC.swap+'</span>';
+}
+function txAmount(r){
+  if(['Income','Refund','LoanBorrow','LoanCollect'].indexOf(r.kind)>=0)return '<span class="li-amt num pos">+'+rp(r.amount)+'</span>';
+  if(['Expense','FundExpense','LoanLend','LoanRepay'].indexOf(r.kind)>=0)return '<span class="li-amt num">−'+rp(r.amount)+'</span>';
+  if(r.kind==='BalanceAdjustment')return '<span class="li-amt num">'+rpSigned(r.amount)+'</span>';
+  return '<span class="li-amt num muted">'+rp(r.amount)+'</span>';
+}
+var KIND={Income:'Income',Expense:'',FundExpense:'Belanja dari fund',Refund:'Refund',Transfer:'Transfer',FundAllocation:'Alokasi fund',FundRelease:'Tarik fund',
+  Sweep:'Sapu ke Emergency',LoanBorrow:'Pinjam',LoanLend:'Dipinjamkan',LoanRepay:'Bayar utang',LoanCollect:'Piutang diterima',BalanceAdjustment:'Penyesuaian saldo'};
+function txItem(r,today){
+  var when=dayLabel(r.at,today),sub;
+  if(r.kind==='Expense'&&r.category==='Uncategorized')sub='<span class="tag warnt">Belum berkategori</span>'+esc(when);
+  else if(r.kind==='Expense')sub=esc([r.category,r.sub,when].filter(Boolean).join(' · '));
+  else sub=esc([KIND[r.kind]||r.kind,when].filter(Boolean).join(' · '));
+  return '<li>'+txIcon(r)+'<div class="li-main"><span class="li-title">'+esc(r.desc)+'</span><span class="li-sub">'+sub+'</span></div>'+txAmount(r)+'</li>';
+}
+function budgetCard(d,compact){
+  var b=d.budget,wb=b.wantsBudget,over=b.wants-wb,saving=b.savingLimit;
+  var s='';
+  s+='<div class="bucket">'+head('Needs','var(--needs)',b.needs,b.planned[0])+bar(b.needs,b.planned[0],'var(--needs)',!compact)+
+    (b.needs>b.planned[0]?'<span class="over">'+IC.up+'Lebih '+rp(b.needs-b.planned[0])+' dari rencana</span>':'<span class="small muted">Sisa '+rp(b.planned[0]-b.needs)+'</span>')+'</div>';
+  s+='<div class="bucket">'+head('Wants','var(--wants)',b.wants,wb)+bar(b.wants,wb,'var(--wants)',!compact)+
+    (over>0?'<span class="over">'+IC.up+'Lebih '+rp(over)+' dari rencana</span>':'<span class="small muted">Sisa '+rp(wb-b.wants)+'</span>')+
+    (b.wantsCarryIn>0?'<span class="small muted">Jatah '+rp(b.planned[1])+' dipotong '+rp(b.wantsCut)+' karena defisit bulan lalu'+(b.wantsCarryIn>b.wantsCut?' (sisa '+rp(b.wantsCarryIn-b.wantsCut)+' menunggu pemasukan)':'')+'.</span>':'')+'</div>';
+  s+='<div class="bucket">'+head('Saving','var(--saving)',b.netContrib,saving,'Alokasi ')+bar(Math.max(0,b.netContrib),saving,'var(--saving)',!compact)+
+    '<span class="small muted">'+(b.netContrib>saving?'Melebihi rencana '+rp(b.netContrib-saving):'Sisa rencana '+rp(saving-b.netContrib))+'</span>'+
+    (compact?'':'<span class="note">Dihitung dari alokasi ke fund bulan ini, bukan total saldo fund.</span>')+'</div>';
+  return s;
+}
+
+/* ---------- layar ---------- */
+function renderHome(d){
+  var s=d.saldo,b=d.budget,h='';
+  var upd=d.generatedAt?d.generatedAt.slice(11,16).replace(':','.')+' WIB':'';
+  h+='<div class="row"><span class="pill">'+monthName(d.current)+'</span><button type="button" class="refresh" data-act="refresh" aria-label="Muat ulang data">'+(state.demo?'Data contoh':'Diperbarui '+upd)+'</button></div>';
+  if(!s.hasOpening){
+    h+='<section class="card center"><h2>Belum ada saldo awal</h2><p class="note">Kirim <code>/saldoawal 1500000</code> di chat bot (isi dengan saldomu sekarang), lalu buka lagi dashboard ini.</p></section>';
+    return h;
+  }
+  var freeW=s.total>0?Math.max(0,Math.min(100,s.free/s.total*100)):100;
+  h+='<section class="hero" aria-label="Saldo"><div class="stack" style="gap:4px"><span class="lbl">Total uang likuid</span><span class="big num">'+rp(s.total)+'</span></div>'+
+    '<div class="alloc" aria-hidden="true"><span style="width:'+freeW+'%;background:#ECEFF4"></span><span style="flex:1;background:#7FE07A"></span></div>'+
+    '<div class="grid2"><div class="stack" style="gap:2px"><span class="lbl"><span class="dot" style="background:#ECEFF4"></span>Belum dialokasikan</span><span class="mid num">'+rp(s.free)+'</span></div>'+
+    '<div class="stack" style="gap:2px"><span class="lbl"><span class="dot" style="background:#7FE07A"></span>Di funds</span><span class="mid num">'+rp(s.reserved)+'</span></div></div>'+
+    '<div class="divider"></div><div class="stack" style="gap:4px"><div class="row" style="align-items:baseline"><span class="lbl">Posisi likuid neto</span><span class="num" style="font-size:15px;font-weight:800">'+rp(s.net)+'</span></div>'+
+    '<span class="lbl" style="font-size:11px;line-height:1.5;font-weight:400">Saldo likuid + piutang − utang. Investasi di platform luar tidak dihitung.</span></div></section>';
+  if(d.attention&&d.attention.count>0){
+    h+='<section class="warn" aria-label="Perlu perhatian"><span class="chip">'+IC.warn+'</span><div class="stack" style="flex:1;gap:6px">'+
+      '<span class="t">'+d.attention.count+' transaksi belum berkategori</span><span class="b">'+rp(d.attention.total)+' belum masuk Needs atau Wants, jadi sisa budget terlihat lebih besar dari aslinya.</span>'+
+      '<button type="button" data-act="close">Kategorikan di chat</button></div></section>';
+  }
+  h+='<section class="stack" style="gap:8px" aria-labelledby="jb"><div class="row"><h2 id="jb">Budget bulan ini</h2><button type="button" class="linkbtn" data-tab-go="budget">Detail</button></div>'+
+    '<div class="card stack" style="gap:18px"><div class="row" style="align-items:baseline"><span class="small muted" style="font-size:13px">Pemasukan</span><span class="num" style="font-size:15px;font-weight:700">'+rp(b.income)+'</span></div>'+
+    budgetCard(d,true)+
+    '<div class="row sep"><span class="bname"><span class="sw outline"></span>Investment</span><span class="amt">Rencana <strong style="color:var(--invest-text)">'+rp(b.planned[3])+'</strong> · tidak dilacak</span></div></div></section>';
+  h+='<section class="stack" style="gap:8px" aria-labelledby="jt"><h2 id="jt" style="padding:4px 0">Transaksi terbaru</h2>'+
+    (d.recent.length?'<ul class="list">'+d.recent.slice(0,6).map(function(r){return txItem(r,d.today);}).join('')+'</ul>':'<div class="card note">Belum ada transaksi.</div>')+'</section>';
+  return h;
+}
+function renderBudget(d){
+  var b=d.budget,m=d.month,h='',cur=d.current,start=d.start||cur;
+  var canPrev=!state.demo&&m>start&&m>addMonth(cur,-12),canNext=!state.demo&&m<cur;
+  h+='<div class="monthnav"><button type="button" data-act="prev" aria-label="Bulan sebelumnya"'+(canPrev?'':' disabled')+'>'+IC.left+'</button>'+
+    '<h2 style="font-size:15px">'+monthName(m)+'</h2><button type="button" data-act="next" aria-label="Bulan berikutnya"'+(canNext?'':' disabled')+'>'+IC.right+'</button></div>';
+  h+='<div class="grid3"><div class="stat"><span class="small muted">Pemasukan</span><span class="v num" title="'+rp(b.income)+'">'+rpShort(b.income)+'</span></div>'+
+    '<div class="stat"><span class="small muted">Pengeluaran</span><span class="v num" title="'+rp(b.spent)+'">'+rpShort(b.spent)+'</span></div>'+
+    '<div class="stat"><span class="small muted">Arus kas</span><span class="v num '+(b.cashFlow>=0?'pos':'neg')+'" title="'+rpSigned(b.cashFlow)+'">'+rpShort(b.cashFlow,true)+'</span></div></div>';
+  var r=b.ratio||[0,0,0,0],cols=['var(--needs)','var(--wants)','var(--saving)','var(--invest)'],names=['Needs','Wants','Saving','Investment'];
+  h+='<section class="card stack" style="gap:14px" aria-labelledby="jr"><div class="row" style="align-items:baseline"><h3 id="jr">Rasio aktif</h3><span class="num" style="font-size:15px;font-weight:700">'+r.join(' / ')+'</span></div>'+
+    '<div class="ratio" aria-hidden="true">'+r.map(function(p,i){return p>0?'<span style="width:'+p+'%;background:'+cols[i]+'"></span>':'';}).join('')+'</div>'+
+    '<div class="grid2" style="gap:10px 12px">'+names.map(function(n,i){return '<div class="stack" style="gap:2px"><span class="small muted"><span class="dot" style="background:'+cols[i]+'"></span>'+n+' '+r[i]+'%</span><span class="num" style="font-size:14px;font-weight:700">'+rp(b.planned[i])+'</span></div>';}).join('')+'</div>'+
+    '<p class="note">Rasio baru hanya berlaku untuk pemasukan baru. Alokasi bulan-bulan sebelumnya tidak berubah.</p></section>';
+  h+='<section class="stack" style="gap:8px" aria-labelledby="jrv"><h2 id="jrv" style="padding:4px 0">Rencana vs terpakai</h2><div class="card stack" style="gap:18px">'+budgetCard(d,false)+'</div>'+
+    '<div class="card stack dashed" style="gap:6px"><div class="row" style="align-items:baseline"><span class="bname"><span class="sw outline"></span>Investment</span><span class="amt">Rencana <strong style="color:var(--invest-text)">'+rp(b.planned[3])+'</strong></span></div>'+
+    '<p class="note">Hanya rencana alokasi. Pembelian dan portofolio dikelola di platform investasimu, tidak dilacak di sini.</p></div></section>';
+  if(b.unknown>0)h+='<section class="warn"><span class="chip">'+IC.warn+'</span><div class="stack" style="gap:4px"><span class="t">'+rp(b.unknown)+' belum berkategori</span><span class="b">Belum dihitung ke Needs atau Wants, dan mengurangi jumlah yang disapu saat tutup buku.</span></div></section>';
+  var closing;
+  if(m<cur)closing=b.swept>0?'Disapu ke Emergency: <strong class="num">'+rp(b.swept)+'</strong>':'Tidak ada sisa yang disapu.';
+  else closing='Perkiraan sapu ke Emergency: <strong class="num">'+rp(b.sweep)+'</strong>. Tutup buku otomatis tanggal 2 bulan depan.';
+  h+='<section class="card stack" style="gap:6px" aria-label="Tutup buku"><h3>Tutup buku</h3><span style="font-size:13px">'+closing+'</span>'+
+    (b.wants>b.wantsBudget?'<span class="small muted">Kelebihan Wants '+rp(b.wants-b.wantsBudget)+' memotong jatah Wants bulan berikutnya.</span>':'')+'</section>';
+  var subs=b.subcategories||[];
+  if(subs.length){
+    var mx=subs[0][1];
+    h+='<section class="card stack" style="gap:14px" aria-labelledby="js"><h3 id="js">Pengeluaran per subkategori</h3>'+subs.map(function(x){
+      return '<div class="stack" style="gap:6px"><div class="row" style="font-size:13px"><span>'+esc(x[0]==='Other'?'Lainnya':x[0])+'</span><span class="num" style="font-weight:700">'+rp(x[1])+'</span></div>'+
+        '<div class="track" style="height:6px"><span class="solo" style="width:'+Math.max(2,x[1]/mx*100)+'%;background:var(--subbar)"></span></div></div>';
+    }).join('')+'</section>';
+  }
+  var tr=(d.trend||[]).filter(function(t){return t.month>=start;});
+  if(tr.length){
+    var top=Math.max.apply(null,tr.map(function(t){return Math.max(t.income,t.spent);}).concat([1])),n=tr.length;
+    var aria='Pemasukan dan pengeluaran per bulan: '+tr.map(function(t){return monthShort(t.month)+' '+rp(t.income)+' dan '+rp(t.spent);}).join('; ')+'.';
+    h+='<figure class="card stack" style="margin:0;gap:14px" aria-label="'+esc(aria)+'"><figcaption class="row" style="align-items:baseline"><h3>Tren '+n+' bulan</h3><span class="small muted">dari bulan saldo awal</span></figcaption>'+
+      '<div class="chart" aria-hidden="true" style="grid-template-columns:repeat('+n+',minmax(0,1fr))">'+tr.map(function(t){
+        var running=t.month===cur;
+        return '<div class="col"><span style="height:'+(t.income/top*140)+'px;background:var(--chart-in)"></span><span style="height:'+(t.spent/top*140)+'px;background:var(--chart-out)'+(running?';opacity:.55':'')+'"></span></div>';
+      }).join('')+'</div>'+
+      '<div class="chart-labels" aria-hidden="true" style="grid-template-columns:repeat('+n+',minmax(0,1fr))">'+tr.map(function(t){return '<span'+(t.month===m?' style="font-weight:700;color:var(--text)"':'')+'>'+monthShort(t.month)+'</span>';}).join('')+'</div>'+
+      '<div class="legend"><span><span class="sw" style="background:var(--chart-in)"></span>Pemasukan</span><span><span class="sw" style="background:var(--chart-out)"></span>Pengeluaran</span>'+
+      (tr.some(function(t){return t.month===cur;})?'<span>'+monthShort(cur)+' masih berjalan</span>':'')+'</div></figure>';
+  }
+  h+='<p class="note">Utang-piutang dan transfer antar-akun tidak dihitung sebagai pemasukan atau pengeluaran.</p>';
+  return h;
+}
+function renderFunds(d){
+  var s=d.saldo,b=d.budget,h='';
+  h+='<section class="card stack" style="border-radius:20px;padding:18px;gap:12px" aria-label="Ringkasan funds"><div class="stack" style="gap:4px"><span class="muted" style="font-size:13px">Total di funds</span>'+
+    '<span class="num" style="font-size:28px;font-weight:800;letter-spacing:-.4px">'+rp(s.reserved)+'</span></div>'+
+    '<div class="stack" style="gap:6px"><div class="row amt num"><span>Kontribusi '+MONTHS[Number(d.current.slice(5,7))-1]+'</span><span><strong>'+rp(b.netContrib)+'</strong> / '+rp(b.savingLimit)+'</span></div>'+
+    bar(Math.max(0,b.netContrib),b.savingLimit,'var(--saving)')+'</div>'+
+    '<p class="note">Uang di funds tetap bagian dari saldo likuid. Funds hanya menandai uang itu untuk tujuan tertentu.</p></section>';
+  var funds=(d.funds||[]).filter(function(f){return f.balance>0||f.target!==null;});
+  h+='<section class="stack" style="gap:8px" aria-labelledby="jf"><div class="row" style="align-items:baseline;padding:4px 0"><h2 id="jf">Funds</h2><span class="muted" style="font-size:13px">'+funds.length+' fund</span></div>';
+  if(!funds.length)h+='<div class="card note">Belum ada dana yang dialokasikan. Kirim <code>alokasi emergency 50k</code> di chat, atau tunggu tutup buku tanggal 2.</div>';
+  funds.forEach(function(f,i){
+    var em=f.name==='emergency',icon='<span class="ic '+(em?'in':(f.target!==null?'needs':'neutral'))+'">'+(em?IC.shield:IC.target)+'</span>';
+    if(f.target!==null&&f.target>0){
+      var p=pct(f.balance,f.target),color=em?'var(--saving)':'var(--needs)';
+      h+='<div class="card row" style="align-items:flex-start;gap:12px;padding:14px 16px">'+icon+'<div class="stack" style="flex:1;min-width:0;gap:6px">'+
+        '<div class="row" style="align-items:baseline"><span style="font-size:15px;font-weight:700">'+esc(title(f.name))+'</span><span class="amt num"><strong>'+rp(f.balance)+'</strong> / '+rp(f.target)+'</span></div>'+
+        bar(Math.min(f.balance,f.target),f.target,color)+'<span class="small muted">'+p+'%'+(f.balance<f.target?' · kurang '+rp(f.target-f.balance)+' dari target':' · target tercapai')+'</span></div></div>';
+    } else {
+      h+='<div class="card row" style="gap:12px;padding:14px 16px">'+icon+'<div class="row" style="flex:1;min-width:0;align-items:baseline"><span style="font-size:15px;font-weight:700">'+esc(title(f.name))+'</span>'+
+        '<span class="amt num"><strong>'+rp(f.balance)+'</strong> · tanpa target</span></div></div>';
+    }
+  });
+  h+='</section>';
+  h+='<section class="stack" style="gap:8px" aria-labelledby="ju"><h2 id="ju" style="padding:4px 0">Utang &amp; piutang</h2>'+
+    '<div class="grid2" style="gap:8px"><div class="stat"><span class="small muted">Harus ditagih</span><span class="v num pos" style="font-size:17px">'+rp(s.receivable)+'</span></div>'+
+    '<div class="stat"><span class="small muted">Harus dibayar</span><span class="v num neg" style="font-size:17px">'+rp(s.payable)+'</span></div></div>';
+  var loans=(d.loans||[]).slice().sort(function(a,c){return (a.due||'9999').localeCompare(c.due||'9999');});
+  if(loans.length){
+    h+='<ul class="list">'+loans.map(function(l){
+      var piut=l.type==='piutang',sub;
+      if(l.overdue)sub=(piut?'Piutang':'Utang')+'<span class="tag debtt">Terlambat sejak '+esc(dayLabel(l.due,d.today))+'</span>';
+      else sub=esc((piut?'Piutang':'Utang')+(l.due?' · tempo '+Number(l.due.slice(8,10))+' '+monthShort(l.due)+' '+l.due.slice(0,4):' · tanpa tempo'));
+      return '<li><span class="ic round '+(l.overdue?'debt':(piut?'in':'debt'))+'">'+(l.overdue?IC.clock:IC.person)+'</span><div class="li-main"><span class="li-title">'+esc(l.person)+'</span><span class="li-sub">'+sub+'</span></div>'+
+        '<span class="li-amt num '+(piut?'pos':'neg')+'">'+rp(l.remaining)+'</span></li>';
+    }).join('')+'</ul>';
+  } else h+='<div class="card note">Tidak ada utang atau piutang aktif.</div>';
+  h+='<p class="note">Kas berubah saat pinjam atau bayar, tetapi budget pemasukan dan pengeluaran tidak.</p></section>';
+  return h;
+}
+function renderSkeleton(){
+  return '<div class="sk" style="height:32px;width:140px;border-radius:999px"></div><div class="sk" style="height:190px;border-radius:20px"></div><div class="sk" style="height:260px"></div><div class="sk" style="height:220px"></div>';
+}
+function renderError(e){
+  var auth=e&&e.code==='auth';
+  return '<section class="card center" role="alert"><h2>'+(auth?'Sesi tidak dikenali':'Data gagal dimuat')+'</h2><p class="note">'+esc(e&&e.message||'')+
+    (auth?' Tutup lalu buka lagi lewat tombol Dashboard di chat bot.':'')+'</p><button type="button" class="btn" data-act="refresh">Coba lagi</button></section>';
+}
+function renderNotTelegram(reason){
+  return '<section class="card center"><h2>Buka dari Telegram</h2><p class="note">'+reason+'</p><p class="note">Pratinjau dengan data contoh: tambahkan <code>?demo=1</code> di alamat halaman ini.</p></section>';
+}
+function render(){
+  document.querySelectorAll('nav.tabs button').forEach(function(btn){
+    if(btn.getAttribute('data-tab')===state.tab)btn.setAttribute('aria-current','page');else btn.removeAttribute('aria-current');
+  });
+  if(state.blocked){screen.innerHTML=renderNotTelegram(state.blocked);return;}
+  if(state.error){var e=state.error;state.error=null;screen.innerHTML=renderError(e);return;}
+  if(!state.home||(state.loading&&state.tab==='home')){screen.innerHTML=renderSkeleton();return;}
+  if(state.tab==='budget'){
+    var d=state.byMonth[state.budgetMonth];
+    screen.innerHTML=d&&!state.loading?renderBudget(d):renderSkeleton();
+  } else if(state.tab==='funds')screen.innerHTML=renderFunds(state.home);
+  else screen.innerHTML=renderHome(state.home);
+}
+
+/* ---------- interaksi ---------- */
+document.querySelector('nav.tabs').addEventListener('click',function(ev){
+  var btn=ev.target.closest('button[data-tab]');if(!btn)return;
+  var t=btn.getAttribute('data-tab');if(t===state.tab)return;
+  state.tab=t;haptic();render();window.scrollTo(0,0);
+});
+screen.addEventListener('click',function(ev){
+  var go=ev.target.closest('[data-tab-go]');
+  if(go){state.tab=go.getAttribute('data-tab-go');haptic();render();window.scrollTo(0,0);return;}
+  var act=ev.target.closest('[data-act]');if(!act)return;
+  var a=act.getAttribute('data-act');
+  if(a==='refresh'){state.byMonth={};state.budgetMonth=null;loadHome();}
+  else if(a==='close'){if(tg)tg.close();}
+  else if(a==='prev'||a==='next'){haptic();loadBudgetMonth(addMonth(state.budgetMonth,a==='prev'?-1:1));}
+});
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&state.home&&!state.demo&&Date.now()-state.loadedAt>60000){state.byMonth={};state.budgetMonth=null;loadHome();}
+});
+
+/* ---------- mulai ---------- */
+if(state.demo){loadHome();}
+else{
+  state.api=apiUrl();
+  if(!tg||!tg.initData)state.blocked='Dashboard ini hanya bisa dibuka lewat tombol Dashboard di chat bot Binbin.';
+  else if(!state.api)state.blocked='Alamat data belum terpasang. Jalankan activateMiniApp() di Apps Script, lalu buka lagi dari tombol Dashboard.';
+  if(state.blocked)render();else loadHome();
+}
+})();
+</script>
+</body>
+</html>
